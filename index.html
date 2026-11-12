@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Subtract">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="format-detection" content="telephone=no">
+  <title>Subtraction Speed</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main id="app">
+
+    <!-- Home -->
+    <section id="screen-home" class="screen active" aria-labelledby="home-title">
+      <h1 id="home-title">Subtraction Speed</h1>
+      <p id="home-settings" class="settings-line"></p>
+      <button id="btn-start" class="btn btn-primary btn-huge" type="button">Start</button>
+      <div class="voice-row">
+        <button id="btn-voice" class="btn btn-toggle" type="button" aria-pressed="false">Voice: Off</button>
+        <p id="voice-note" class="note" hidden></p>
+      </div>
+      <nav class="row">
+        <button class="btn" type="button" data-nav="settings">Settings</button>
+        <button class="btn" type="button" data-nav="history">History</button>
+      </nav>
+    </section>
+
+    <!-- Settings -->
+    <section id="screen-settings" class="screen" aria-labelledby="settings-title">
+      <header class="bar">
+        <button class="btn btn-small" type="button" data-nav="home">&larr; Back</button>
+        <h2 id="settings-title">Settings</h2>
+      </header>
+      <form id="settings-form" novalidate>
+        <label for="in-start">Start number</label>
+        <input id="in-start" name="start" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-describedby="err-start">
+        <p id="err-start" class="field-error" aria-live="polite"></p>
+
+        <label for="in-step">Subtract by</label>
+        <input id="in-step" name="step" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-describedby="err-step">
+        <p id="err-step" class="field-error" aria-live="polite"></p>
+
+        <p id="settings-preview" class="note"></p>
+        <button id="btn-save" class="btn btn-primary" type="submit">Save</button>
+        <p id="settings-saved" class="note ok" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <!-- Game -->
+    <section id="screen-game" class="screen" aria-label="Game">
+      <div id="countdown" class="countdown" aria-live="assertive"></div>
+      <div id="game-run" class="game-run" hidden>
+        <header class="game-top">
+          <span id="progress" class="progress"></span>
+          <span id="mic-status" class="mic-status" hidden></span>
+          <button id="btn-quit" class="btn btn-small" type="button">Quit</button>
+        </header>
+        <div class="game-main">
+          <div id="current-value" class="current-value" aria-live="polite"></div>
+          <div id="minus-text" class="minus-text"></div>
+          <div id="answer" class="answer" aria-live="polite"></div>
+        </div>
+        <div id="keypad" class="keypad" aria-label="Number pad">
+          <button type="button" data-key="1">1</button>
+          <button type="button" data-key="2">2</button>
+          <button type="button" data-key="3">3</button>
+          <button type="button" data-key="4">4</button>
+          <button type="button" data-key="5">5</button>
+          <button type="button" data-key="6">6</button>
+          <button type="button" data-key="7">7</button>
+          <button type="button" data-key="8">8</button>
+          <button type="button" data-key="9">9</button>
+          <span class="key-spacer" aria-hidden="true"></span>
+          <button type="button" data-key="0">0</button>
+          <button type="button" data-key="back" aria-label="Backspace">&#9003;</button>
+        </div>
+      </div>
+      <div id="quit-confirm" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="quit-title">
+        <div class="modal-box">
+          <p id="quit-title">Quit this run? It will not be saved.</p>
+          <div class="row">
+            <button id="btn-quit-no" class="btn" type="button">Keep playing</button>
+            <button id="btn-quit-yes" class="btn btn-danger" type="button">Quit</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="screen-results" class="screen" aria-labelledby="results-title">
+      <h2 id="results-title">Results</h2>
+      <p id="pb-label" class="pb-label" hidden>New personal best!</p>
+      <dl id="results-list" class="stats"></dl>
+      <p id="pb-compare" class="note"></p>
+      <div class="col">
+        <button class="btn btn-primary" type="button" id="btn-again">Play again</button>
+        <button class="btn" type="button" data-nav="history">History</button>
+        <button class="btn" type="button" data-nav="home">Home</button>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section id="screen-history" class="screen" aria-labelledby="history-title">
+      <header class="bar">
+        <button class="btn btn-small" type="button" data-nav="home">&larr; Back</button>
+        <h2 id="history-title">History</h2>
+      </header>
+      <div id="pb-summary" class="pb-summary"></div>
+      <div class="filters">
+        <div class="seg" role="group" aria-label="Input mode">
+          <button type="button" data-mode="typed" aria-pressed="true">Typed</button>
+          <button type="button" data-mode="voice" aria-pressed="false">Voice</button>
+        </div>
+        <label class="sr-only" for="pair-filter">Start and step</label>
+        <select id="pair-filter"></select>
+      </div>
+      <canvas id="chart" class="chart" aria-label="Average seconds per correct answer over time" role="img"></canvas>
+      <p class="note">Average seconds per correct answer (lower is better)</p>
+      <ul id="run-list" class="run-list"></ul>
+
+      <details class="tools">
+        <summary>Export / Import / Clear</summary>
+        <div class="col">
+          <button id="btn-export" class="btn" type="button">Export</button>
+          <div id="export-box" hidden>
+            <textarea id="export-text" readonly rows="6" aria-label="Exported JSON"></textarea>
+            <div class="row">
+              <button id="btn-copy" class="btn" type="button">Copy</button>
+              <button id="btn-share" class="btn" type="button" hidden>Share</button>
+            </div>
+            <p id="export-msg" class="note" aria-live="polite"></p>
+          </div>
+
+          <label for="import-text">Import (paste exported JSON)</label>
+          <textarea id="import-text" rows="4"></textarea>
+          <button id="btn-import" class="btn" type="button">Import</button>
+          <p id="import-msg" class="note" aria-live="polite"></p>
+
+          <button id="btn-clear" class="btn btn-danger" type="button">Clear history</button>
+          <div id="clear-confirm" class="confirm" hidden>
+            <p>Delete all runs? This cannot be undone.</p>
+            <div class="row">
+              <button id="btn-clear-no" class="btn" type="button">Cancel</button>
+              <button id="btn-clear-yes" class="btn btn-danger" type="button">Delete all</button>
+            </div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "subtraction-speed",
+  "private": true,
+  "type": "module",
+  "description": "Static PWA. No dependencies; this file only enables ES modules and the test script for Node.",
+  "scripts": {
+  "test": "node --test tests/game.test.js",
+    "serve": "node serve.js"
+  }
+}

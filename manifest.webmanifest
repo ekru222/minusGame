@@ -1,0 +1,27 @@
+Downloaded from DOI SI at 2026-11-12T21:36:38.762Z.
+
+Included (16):
+  game.js  5692 bytes  sha256 f05eb0b8df62e487ba27221a33207cafcabfc172dfefd52a317e89d89e535453
+  history.js  3959 bytes  sha256 22220da803968751462290fc7fe9429785ccbf10c3bd58eac7eec3b6ff7b5c7e
+  speech.js  1592 bytes  sha256 e6781770e089a0fdb1ded3cac919f3c191bf1036afb468c8f370ff07e8bc1774
+  storage.js  1569 bytes  sha256 4de197c96c2a69e1deb5b9ca21a12dd96f64f5779342d7de7d745542df4ae5c4
+  chart.js  2353 bytes  sha256 5c4a9ba0739153622cedfbf42e095567f97760cb6be2c3d3401979c1c66856db
+  styles.css  6672 bytes  sha256 d401c1280bc7ff0bd822cd09f837b222e65d8f2c2a4e51655fff6c0290915230
+  app.js  15789 bytes  sha256 c3445cbbe193bd44742ae7cdffb15f6f75b2135b2abe0469e394fb0bc80645de
+  sw.js  1254 bytes  sha256 e59dc18eeb633cd61ec8246951b4e702b690bd5d344026816893ecefa1ba2e8b
+  icon.svg  305 bytes  sha256 47438689fa45eee9189c938597f3f29b9bd66f90a6e4d72c66e609028952075d
+  game.test.js  8682 bytes  sha256 6ee676bb7717293029f144c060dece2c6cb71283678a35287a45245ef173f214
+  package.json  282 bytes  sha256 73266d7ee552760f6645bf91d745a7e87340bcdff05d08fdde37d8eca9e67ae5
+  icon-192.png  871 bytes  sha256 5b3ab954b63db0118cb7429fb80e85d461eb73e8c8b7a7b9d291aa8bee468e13
+  icon-512.png  2648 bytes  sha256 e53c8c28ebbbcfb57c91df818c657a23d75356fff2e4a2930c6b8785795b6f90
+  apple-touch-icon.png  827 bytes  sha256 3774f020360112333c84335dd0d7e9ce6bf81b98d0bd257f20abc44d3cf467b1
+  screenshots.png  106624 bytes  sha256 98deae725beb25f2584562e5d72eb8be3bbf08a448551c45d9a3b6b73ff7f318
+  README.md  2102 bytes  sha256 5321f1d0c13c786d5134ab1be67cb961f8b232cecc7d642a8c7865e264b534a3
+
+Not included (6):
+  index.html: not a type you can download here
+  manifest.webmanifest: not a type you can download here
+  shot-results.png: not found, or not yours
+  shot-hist.png: not found, or not yours
+  shot-game.png: not found, or not yours
+  shot-home.png: not found, or not yours
