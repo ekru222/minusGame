@@ -111,6 +111,7 @@ function startGame() {
   $('#game-run').hidden = true;
   $('#quit-confirm').hidden = true;
   $('#mic-status').hidden = mode !== 'voice';
+  if (mode === 'voice') startVoice(); // must run inside the Start tap for Safari
   let n = 3;
   const cd = $('#countdown');
   cd.textContent = String(n);
@@ -128,7 +129,7 @@ function startGame() {
     ui.game.begin();
     $('#game-run').hidden = false;
     renderGame();
-    if (mode === 'voice') startVoice();
+    if (mode === 'voice' && !ui.recognizer) startVoice();
   }, 1000);
 }
 
@@ -361,29 +362,68 @@ $('#btn-clear-yes').addEventListener('click', () => {
 });
 
 // ---------- voice (game screen only) ----------
+// Errors that will not fix themselves by restarting: stop and tell the player why.
+const VOICE_ERRORS = {
+  'not-allowed': 'Mic blocked: allow microphone access',
+  'service-not-allowed': 'Speech service blocked',
+  'audio-capture': 'No microphone found',
+  'network': 'Speech service unreachable',
+  'language-not-supported': 'Language not supported',
+};
+const MAX_RESTARTS = 5; // restarts in a row without a result before giving up
+
 function setMic(state, text) {
   const el = $('#mic-status');
   el.className = `mic-status ${state}`;
   el.textContent = text;
+  el.title = state === 'error' ? 'Tap to retry the microphone' : '';
 }
 
+// Tapping the status after an error tries again.
+$('#mic-status').addEventListener('click', () => {
+  if ($('#mic-status').classList.contains('error') && ui.game?.snapshot().mode === 'voice') {
+    stopVoice();
+    startVoice();
+  }
+});
+
+/**
+ * Called from the Start button tap (Safari only grants the microphone inside a user
+ * gesture), so it starts listening during the countdown. Input is ignored until the
+ * game is running, because the game rejects input in any other state.
+ */
 function startVoice() {
   if (!VOICE_SUPPORTED || !ui.game) return;
-  const rec = new SpeechRecognitionCtor();
+  let rec;
+  try {
+    rec = new SpeechRecognitionCtor();
+  } catch (err) {
+    console.warn('Speech recognition could not be created', err);
+    setMic('error', 'Mic error (could not start)');
+    return;
+  }
   rec.lang = 'en-US';
   rec.continuous = true;
   rec.interimResults = true;
   rec.maxAlternatives = 3;
   ui.recognizer = rec;
-  let handledIndex = -1; // results before this index are already counted
+  let handledIndex = -1; // results at or before this index are already counted
+  let restarts = 0;
+  let fatal = false;
 
   rec.onstart = () => setMic('listening', '🎙 Listening');
   rec.onresult = (e) => {
+    restarts = 0;
     if (!ui.game) return;
+    const running = ui.game.snapshot().status === 'running';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       if (i <= handledIndex) continue;
       const result = e.results[i];
-      // Try every alternative; take the first one that matches, else the top one.
+      if (!running) {
+        if (result.isFinal) handledIndex = i; // speech during the countdown is dropped
+        continue;
+      }
+      // Try every alternative; take the first one that matches, else judge the top one.
       let outcome = null;
       for (let a = 0; a < result.length && !outcome; a++) {
         const digits = parseSpokenNumber(result[a].transcript);
@@ -406,21 +446,37 @@ function startVoice() {
     if (ui.game) renderGame();
   };
   rec.onerror = (e) => {
-    if (e.error === 'no-speech' || e.error === 'aborted') return;
-    setMic('error', e.error === 'not-allowed' ? 'Mic blocked' : 'Mic error');
+    console.warn('Speech recognition error:', e.error, e.message || '');
+    if (e.error === 'no-speech' || e.error === 'aborted') return; // harmless; onend restarts
+    if (VOICE_ERRORS[e.error]) {
+      fatal = true;
+      setMic('error', `${VOICE_ERRORS[e.error]} (tap to retry)`);
+    } else {
+      setMic('error', `Mic error: ${e.error} (tap to retry)`);
+    }
   };
-  // Safari stops recognition periodically; restart while the run is going.
+  // Recognition stops on its own from time to time; restart while the run is going,
+  // but not after a fatal error, and not endlessly.
   rec.onend = () => {
-    if (ui.recognizer === rec && ui.game?.snapshot().status === 'running') {
-      handledIndex = -1;
-      try { rec.start(); } catch { setMic('error', 'Mic error'); }
+    if (ui.recognizer !== rec || fatal) return;
+    const status = ui.game?.snapshot().status;
+    if (status !== 'running' && status !== 'countdown') return;
+    if (++restarts > MAX_RESTARTS) {
+      setMic('error', 'Mic keeps stopping (tap to retry)');
+      return;
+    }
+    handledIndex = -1;
+    try { rec.start(); } catch (err) {
+      console.warn('Speech recognition restart failed', err);
+      setMic('error', 'Mic error (tap to retry)');
     }
   };
   try {
-    rec.start();
     setMic('', 'Starting mic…');
-  } catch {
-    setMic('error', 'Mic error');
+    rec.start();
+  } catch (err) {
+    console.warn('Speech recognition start failed', err);
+    setMic('error', 'Mic error (tap to retry)');
   }
 }
 
@@ -429,6 +485,7 @@ function stopVoice() {
   ui.recognizer = null;
   if (rec) {
     rec.onend = null;
+    rec.onerror = null;
     try { rec.abort(); } catch { /* ignore */ }
   }
 }

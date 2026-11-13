@@ -1,5 +1,5 @@
 // Offline cache. Bump CACHE when any file changes so phones pick up the update.
-const CACHE = 'ssg-v1';
+const CACHE = 'ssg-v2';
 const ASSETS = [
   './',
   './index.html',

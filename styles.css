@@ -87,7 +87,7 @@ textarea { resize: vertical; font-family: ui-monospace, Menlo, monospace; font-s
 .progress { color: var(--muted); font-variant-numeric: tabular-nums; }
 .mic-status { font-size: 0.85rem; padding: 4px 8px; border-radius: 999px; background: var(--panel); }
 .mic-status.listening { color: var(--ok); }
-.mic-status.error { color: var(--bad); }
+.mic-status.error { color: var(--bad); cursor: pointer; text-decoration: underline; }
 .game-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius); transition: background-color 120ms; }
 .game-main.flash-ok { background: rgba(34, 197, 94, 0.28); transition: none; }
 .game-main.flash-bad { background: rgba(239, 68, 68, 0.35); transition: none; }
