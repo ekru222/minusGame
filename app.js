@@ -110,6 +110,7 @@ function startGame() {
   show('game');
   $('#game-run').hidden = true;
   $('#quit-confirm').hidden = true;
+  $('#voice-fail').hidden = true;
   $('#mic-status').hidden = mode !== 'voice';
   if (mode === 'voice') startVoice(); // must run inside the Start tap for Safari
   let n = 3;
@@ -175,7 +176,7 @@ $('#keypad').addEventListener('pointerdown', (e) => {
 });
 // Desktop testing convenience: physical keyboard.
 document.addEventListener('keydown', (e) => {
-  if (!ui.game || !$('#screen-game').classList.contains('active') || !$('#quit-confirm').hidden) return;
+  if (!ui.game || !$('#screen-game').classList.contains('active') || !$('#quit-confirm').hidden || !$('#voice-fail').hidden) return;
   if (/^[0-9]$/.test(e.key)) handleResult(ui.game.pressDigit(e.key));
   else if (e.key === 'Backspace') handleResult(ui.game.backspace());
 });
@@ -382,8 +383,9 @@ function setMic(state, text) {
 // Tapping the status after an error tries again.
 $('#mic-status').addEventListener('click', () => {
   if ($('#mic-status').classList.contains('error') && ui.game?.snapshot().mode === 'voice') {
+    $('#voice-fail').hidden = true;
     stopVoice();
-    startVoice();
+    startVoice(0);
   }
 });
 
@@ -392,7 +394,12 @@ $('#mic-status').addEventListener('click', () => {
  * gesture), so it starts listening during the countdown. Input is ignored until the
  * game is running, because the game rejects input in any other state.
  */
-function startVoice() {
+// Languages to try, in order: the phone's own setting, then no language at all (browser
+// default). Number words are only understood in English; spoken digits work in any language.
+const VOICE_LANGS = [...new Set([navigator.language || '', ''])];
+const LANG_ERRORS = new Set(['service-not-allowed', 'language-not-supported']);
+
+function startVoice(langIndex = 0) {
   if (!VOICE_SUPPORTED || !ui.game) return;
   let rec;
   try {
@@ -402,7 +409,7 @@ function startVoice() {
     setMic('error', 'Mic error (could not start)');
     return;
   }
-  rec.lang = 'en-US';
+  if (langIndex < VOICE_LANGS.length && VOICE_LANGS[langIndex]) rec.lang = VOICE_LANGS[langIndex];
   rec.continuous = true;
   rec.interimResults = true;
   rec.maxAlternatives = 3;
@@ -448,9 +455,17 @@ function startVoice() {
   rec.onerror = (e) => {
     console.warn('Speech recognition error:', e.error, e.message || '');
     if (e.error === 'no-speech' || e.error === 'aborted') return; // harmless; onend restarts
+    if (LANG_ERRORS.has(e.error) && langIndex + 1 < VOICE_LANGS.length) {
+      // Try the next language setting before giving up.
+      fatal = true;
+      stopVoice();
+      startVoice(langIndex + 1);
+      return;
+    }
     if (VOICE_ERRORS[e.error]) {
       fatal = true;
       setMic('error', `${VOICE_ERRORS[e.error]} (tap to retry)`);
+      offerTypedFallback(VOICE_ERRORS[e.error], e.error);
     } else {
       setMic('error', `Mic error: ${e.error} (tap to retry)`);
     }
@@ -479,6 +494,28 @@ function startVoice() {
     setMic('error', 'Mic error (tap to retry)');
   }
 }
+
+function offerTypedFallback(reason, code) {
+  if (!ui.game || !$('#screen-game').classList.contains('active')) return;
+  $('#voice-fail-reason').textContent = `${reason} (${code}).`;
+  $('#voice-fail-hint').textContent = code === 'not-allowed'
+    ? 'Allow microphone access for this site in Safari settings.'
+    : code === 'service-not-allowed'
+      ? 'The phone refused speech recognition for this page. Check that Siri and Dictation are on.'
+      : '';
+  $('#voice-fail').hidden = false;
+}
+
+$('#btn-voice-typed').addEventListener('click', () => {
+  $('#voice-fail').hidden = true;
+  ui.voiceOn = false;
+  store.saveVoicePref(false);
+  startGame(); // a fresh typed run, so typed and voice answers never share a record
+});
+$('#btn-voice-cancel').addEventListener('click', () => {
+  $('#voice-fail').hidden = true;
+  show('home');
+});
 
 function stopVoice() {
   const rec = ui.recognizer;

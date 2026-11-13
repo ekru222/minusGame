@@ -107,6 +107,9 @@ textarea { resize: vertical; font-family: ui-monospace, Menlo, monospace; font-s
 .modal[hidden] { display: none; }
 .modal-box { background: var(--panel); border-radius: var(--radius); padding: 20px; width: 100%; max-width: 360px; }
 .modal-box p { margin-top: 0; font-size: 1.1rem; }
+.modal-box p.note { font-size: 0.95rem; margin-bottom: 10px; }
+.modal-box .btn:not(.btn-primary):not(.btn-danger) { background: var(--panel-2); }
+.modal-box p.note:empty { display: none; }
 
 /* Results */
 .pb-label { color: var(--ok); font-size: 1.4rem; font-weight: 700; margin: 0; }
